@@ -1,0 +1,19 @@
+.stats {
+  display: flex;
+  text-align: center !important;
+  min-width: 100% !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-direction: column !important;
+}
+
+.statContain {
+  display: flex;
+
+  justify-content: center !important;
+  
+}
+
+.progress {
+  width: 50%;
+}

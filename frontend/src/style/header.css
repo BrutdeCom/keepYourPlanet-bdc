@@ -1,0 +1,56 @@
+.img {
+    width: 100%;
+    height: auto;
+}
+
+.container {
+    position: relative
+}
+
+.text-container {
+  position: absolute;
+  z-index: 1;
+  top: 25%;
+  color: white;
+  margin-left: 10%;
+}
+
+.title {
+  font-size: 4vh;
+}
+
+.text {
+    font-size: 3vh;
+}
+
+@media screen and (min-width: 320px) and (max-width: 800px) {
+  .title {
+    font-size: 1.6vh;
+  }
+  .text {
+    font-size: 1.4vh;
+  }
+  .text-container {
+    position: absolute;
+    z-index: 1;
+    top: 45%;
+    color: white;
+    margin-left: 2%;
+  }
+}
+
+@media screen and (min-width: 800px) and (max-width: 1200px) {
+  .title {
+    font-size: 2.4vh;
+  }
+  .text {
+    font-size: 2vh;
+  }
+  .text-container {
+    position: absolute;
+    z-index: 1;
+    top: 35%;
+    color: white;
+    margin-left: 8%;
+  }
+}

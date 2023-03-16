@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: user.controller.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: user.controller.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>const { getUsers, addUser, changePassword, updateVehicle } = require('../queries/users.queries')
+const { verifyUsername, verifyEmail, verifyPassword, findUserPerUsername, findUserPerEmail } = require('../config/security.config')
+const passport = require('passport')
+
+/**
+ * listUser. Return database users list.
+ * @module listUser
+ * @function
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Object} next - Express next middleware function
+ * @return {undefined}
+ */
+
+exports.listUser = async (req, res, next) => {
+  try {
+    const users = await getUsers()
+    res.status(200).json({ success: true, data: users })
+  } catch (error) {
+    throw error
+  }
+}
+
+/**
+ * createUser. Create new user in database.
+ * @module createUser
+ * @function
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Object} err - Express error object
+ * @param {Object} req.body - JSON payload with username, email and password user data.
+ * @return {undefined}
+ */
+
+exports.createUser = async (req, res, err) => {
+  try {
+    const body = req.body
+    const { username, email, password } = req.body
+
+    if (err) {
+      res.status(500)
+    }
+
+    if (!verifyPassword(password)) {
+      return res.status(400).json({ message: 'Votre mot de passe doit contenir au moins 16 caractères, une minuscule, une majuscule et un symbole spécial' })
+    }
+    if (!verifyEmail(email)) {
+      return res.status(400).json({ message: 'L\'email est invalide.' })
+    }
+    if (!verifyUsername(username)) {
+      return res.status(400).json({ message: 'Le nom d\'utilisateur doit faire entre 5 et 14 caractères.' })
+    }
+    const userEmail = await findUserPerEmail(email)
+    if (userEmail) {
+      return res.status(400).json({ message: 'L\'email est déjà utilisé.' })
+    }
+    const userUsername = await findUserPerUsername(username)
+    if (userUsername) {
+      return res.status(400).json({ message: 'L\'utilisateur existe déjà.' })
+    }
+    addUser(body)
+    res.status(200).json({ message: 'Vous êtes bien inscrit !' })
+  } catch (error) {
+    throw error
+  }
+}
+
+/**
+ * resetPasswordUser. Reset password user in database and return message in frontend according to the conditions met.
+ * @module resetPasswordUser
+ * @function
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Object} err - Express error object
+ * @param {Object} req.body - JSON payload with actual password and new password.
+ * @return {undefined}
+ */
+
+exports.resetPasswordUser = async (req, res, err) => {
+  const { password, newPassword, newPasswordConfirm } = req.body
+  passport.authenticate('jwt', { session: false }, async (err, user) => {
+    try {
+      if (err) {
+        res.status(500)
+      }
+      if (!user) {
+        return res.json(null, false, { message: 'L\'utilisateur n\'existe pas.' })
+      }
+      const match = await user.comparePassword(password)
+      if (!match) {
+        return res.status(400).json({ message: 'Votre ancien mot de passe ne correspond pas.' })
+      }
+      if (newPassword === newPasswordConfirm) {
+        if (!verifyPassword(newPassword)) {
+          return res.status(400).json({ message: 'Votre mot de passe doit contenir au moins 16 caractères, une minuscule, une majuscule et un symbole spécial.' })
+        }
+        await changePassword(newPassword, user)
+        return res.status(200).json({ message: 'Mot de passe modifié avec succès.' })
+      }
+      if (newPassword !== newPasswordConfirm) {
+        return res.status(400).json({ message: 'Vos mots de passe ne sont pas identiques.' })
+      }
+    } catch (error) {
+      throw error
+    }
+  })(req, res)
+}
+
+/**
+ * updateVehicleUser. Verify token authenticity. If it's ok, update vehicle user in database and return 
+ * message success in frontend.
+ * @module updateVehicleUser
+ * @function
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Object} req.body - JSON payload.
+ * @return {undefined}
+ */
+
+exports.updateVehicleUser = (req, res) => {
+  passport.authenticate('jwt', { session: false }, async (err, user) => {
+    try {
+      if (err) {
+        res.status(500)
+      }
+      if (!user) {
+        return res.json({ isAuthenticated: false, user: { username: '' }, message: 'Utilisateur introuvable.' })
+      }
+      const payload = req.body
+      const userID = user._id
+      await updateVehicle(payload, userID)
+      res.status(200).json({ message: 'Véhicule ajouté avec succès.' })
+    } catch (error) {
+      throw error
+    }
+  })(req, res)
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#createUser">createUser</a></li><li><a href="global.html#listUser">listUser</a></li><li><a href="global.html#resetPasswordUser">resetPasswordUser</a></li><li><a href="global.html#updateVehicleUser">updateVehicleUser</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.5</a> on Fri Jul 31 2020 12:49:21 GMT+0200 (GMT+02:00)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

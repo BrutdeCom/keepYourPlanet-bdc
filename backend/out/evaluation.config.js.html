@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: evaluation.config.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: evaluation.config.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>const axios = require('axios')
+require('dotenv').config()
+
+/**
+ * Google API Key
+ * @type {string}
+ */
+
+const googleApiKey = process.env.GOOGLE_API_KEY
+
+/**
+ * Request Google Directions API.
+ * @param {object} itinerary - Contains start and arrival for calculate itinerary.
+ * @returns {object} Return a object data with result itinerary.
+ */
+
+exports.getGoogle = (itinerary) => {
+  const { start, arrival } = itinerary
+  const uri = `https://maps.googleapis.com/maps/api/directions/json?origin=${start}&amp;destination=${arrival}&amp;alternatives=true&amp;key=${googleApiKey}`
+  return axios.post(encodeURI(uri))
+    .then(res => { return res.data })
+    .catch(error => console.log(error))
+}
+
+/**
+ * Converted distance meter in kilometers.
+ * @param {number} distance - Contains distance for itinerary in meter.
+ * @returns {number} Return distance in kilometers.
+ */
+
+const calculNumberKm = (distance) => {
+  try {
+    return (distance / 1000).toFixed(2)
+  } catch (error) {
+    throw error
+  }
+}
+
+/**
+ * Calcul impact for one itinerary. Multiplies distance with emission.
+ * @param {number} distance - Contains distance for itinerary in meter.
+ * @param {number} emission - Contains emission CO2, g/km.
+ * @returns {number} Return total impact of itinerary.
+ */
+
+const calculImpact = async (distance, emission) => {
+  try {
+    const distanceKm = await calculNumberKm(distance)
+    const totalImpact = distanceKm * (emission / 1000)
+    return totalImpact.toFixed(2)
+  } catch (error) {
+    throw error
+  }
+}
+
+/**
+ * Calculate the equivalent of the impact in planted trees.
+ * @param {number} distance - Contains distance for itinerary in meter.
+ * @param {number} emission - Contains emission CO2, g/km.
+ * @returns {number} Return equivalent in planted trees.
+ */
+
+const calculTreeToPlant = async (distance, emission) => {
+  // 1 tree = 25kg CO2
+  try {
+    const impact = await calculImpact(distance, emission)
+    const treeToPlant = impact / 25
+    return treeToPlant.toFixed(2)
+  } catch (error) {
+    throw error
+  }
+}
+
+/**
+ * Calculate the equivalent of the impact in manufactured smartphones.
+ * @param {number} distance - Contains distance for itinerary in meter.
+ * @param {number} emission - Contains emission CO2, g/km.
+ * @returns {number} Return equivalent in manufactured smartphones.
+ */
+
+const calculNumberTel = async (distance, emission) => {
+  // 1 smartphone = 75kg co2
+  try {
+    const impact = await calculImpact(distance, emission)
+    const numberTel = impact / 75
+    return numberTel.toFixed(2)
+  } catch (error) {
+    throw error
+  }
+}
+
+/**
+ * Generate object data for one user itinerary evaluation.
+ * @param {object} body - Contains distance and emission for itinerary.
+ * @returns {object} Return object with datas for evaluations.
+ */
+
+exports.calculResult = async (body) => {
+  const { distance, emission } = body
+  try {
+    const numberKm = await calculNumberKm(distance)
+    const impact = await calculImpact(distance, emission)
+    const treeToPlant = await calculTreeToPlant(distance, emission)
+    const numberTel = await calculNumberTel(distance, emission)
+
+/**
+ * Result
+ * @typedef {Object} Result
+ * @property {number} distance - Distance itinerary in kilometers
+ * @property {number} impact - Impact itinerary in Kg/CO2
+ * @property {number} treeToPlant - Equivalent impact in planted trees
+ * @property {number} numberTel - Equivalent impact in manufactured smartphones
+ */
+
+    const result = {
+      distance: numberKm,
+      impact: impact,
+      treeToPlant: treeToPlant,
+      numberTel: numberTel
+    }
+    return result
+  } catch (error) {
+    throw error
+  }
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#calculImpact">calculImpact</a></li><li><a href="global.html#calculNumberKm">calculNumberKm</a></li><li><a href="global.html#calculNumberTel">calculNumberTel</a></li><li><a href="global.html#calculResult">calculResult</a></li><li><a href="global.html#calculTreeToPlant">calculTreeToPlant</a></li><li><a href="global.html#getGoogle">getGoogle</a></li><li><a href="global.html#googleApiKey">googleApiKey</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.5</a> on Fri Jul 31 2020 11:40:06 GMT+0200 (GMT+02:00)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
